@@ -1,4 +1,4 @@
-package com.alex.guima.application;
+package com.alex.guima.application.rest;
 
 import com.alex.guima.application.dto.TaskDTO;
 import com.alex.guima.domain.entity.Task;

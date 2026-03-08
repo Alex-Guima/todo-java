@@ -12,8 +12,4 @@ public record TaskDTO(String title, boolean completed, LocalDateTime dueDate) {
             throw new IllegalArgumentException("Due date cannot be in the past");
         }
     }
-
-    public TaskDTO(String title, boolean completed) {
-        this(title, completed, LocalDateTime.now().plusWeeks(1));
-    }
 }
