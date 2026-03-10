@@ -1,6 +1,7 @@
 package com.alex.guima.domain.service;
 
 import com.alex.guima.application.dto.TaskDTO;
+import com.alex.guima.application.dto.TaskStatsDTO;
 import com.alex.guima.domain.entity.Task;
 import com.alex.guima.domain.exception.IllegalUpdate;
 import com.alex.guima.repository.TaskRepository;
@@ -48,6 +49,20 @@ public class TaskService {
             task.setTitle(updatedTask.title());
             return taskRepository.persist(task);
         });
+    }
+
+    public Uni<TaskStatsDTO> getStats() {
+        Uni<Long> totalUni = taskRepository.count();
+        Uni<Long> completedUni = taskRepository.count("completed", true);
+        Uni<Long> overdueUni = taskRepository.count(
+                "completed = false and dueDate is not null and dueDate < ?1", LocalDateTime.now());
+
+        return Uni.combine().all().unis(totalUni, completedUni, overdueUni)
+                .with((total, completed, overdue) -> {
+                    long pending = total - completed;
+                    double completionRate = total > 0 ? (completed * 100.0 / total) : 0.0;
+                    return new TaskStatsDTO(total, completed, pending, overdue, completionRate);
+                });
     }
 
     @WithTransaction
