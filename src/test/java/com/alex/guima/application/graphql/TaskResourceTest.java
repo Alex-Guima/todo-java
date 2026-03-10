@@ -112,4 +112,59 @@ class TaskGraphQLResourceTest {
 
         Mockito.verify(taskService, Mockito.times(1)).createTask(any(TaskDTO.class));
     }
+
+    @Test
+    @DisplayName("Mutation: updateTask - Deve atualizar tarefa existente e retornar os novos dados")
+    void updateTask_ComPayloadValido_DeveRetornarTarefaAtualizada() {
+        // Arrange
+        LocalDateTime dueDate = LocalDateTime.now().plusDays(3);
+        Task taskAtualizada = new Task("Atualizada", true, dueDate);
+
+        Mockito.when(taskService.updateTask(Mockito.eq(1L), any(TaskDTO.class)))
+                .thenReturn(Uni.createFrom().item(taskAtualizada));
+
+        String graphqlMutation = """
+            {
+                "query": "mutation { updateTask(taskId: 1, task: { title: \\"Atualizada\\", completed: true, dueDate: \\"2026-12-31T23:59:59\\" }) { title completed } }"
+            }
+            """;
+
+        // Act & Assert
+        given()
+                .contentType(ContentType.JSON)
+                .body(graphqlMutation)
+                .when()
+                .post("/graphql")
+                .then()
+                .statusCode(200)
+                .body("data.updateTask.title", is("Atualizada"))
+                .body("data.updateTask.completed", is(true));
+
+        Mockito.verify(taskService, Mockito.times(1)).updateTask(Mockito.eq(1L), any(TaskDTO.class));
+    }
+
+    @Test
+    @DisplayName("Mutation: deleteTask - Deve retornar true quando exclusão for bem-sucedida")
+    void deleteTask_QuandoExistir_DeveRetornarTrue() {
+        // Arrange
+        Mockito.when(taskService.deleteTask(1L)).thenReturn(Uni.createFrom().voidItem());
+
+        String graphqlMutation = """
+            {
+                "query": "mutation { deleteTask(taskId: 1) }"
+            }
+            """;
+
+        // Act & Assert
+        given()
+                .contentType(ContentType.JSON)
+                .body(graphqlMutation)
+                .when()
+                .post("/graphql")
+                .then()
+                .statusCode(200)
+                .body("data.deleteTask", is(true));
+
+        Mockito.verify(taskService, Mockito.times(1)).deleteTask(1L);
+    }
 }

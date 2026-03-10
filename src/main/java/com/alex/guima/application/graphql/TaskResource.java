@@ -39,4 +39,16 @@ public class TaskResource {
     public Uni<Task> createTask(TaskDTO task) {
         return taskService.createTask(task);
     }
+
+    @Mutation
+    @WithTransaction
+    public Uni<Task> updateTask(@Name("taskId") Long id, TaskDTO task) {
+        return taskService.updateTask(id, task);
+    }
+
+    @Mutation
+    @WithTransaction
+    public Uni<Boolean> deleteTask(@Name("taskId") Long id) {
+        return taskService.deleteTask(id).replaceWith(true);
+    }
 }
