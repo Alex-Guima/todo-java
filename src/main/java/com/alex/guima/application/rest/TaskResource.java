@@ -1,6 +1,7 @@
 package com.alex.guima.application.rest;
 
 import com.alex.guima.application.dto.TaskDTO;
+import com.alex.guima.application.dto.TaskStatsDTO;
 import com.alex.guima.domain.entity.Task;
 import com.alex.guima.domain.service.TaskService;
 import io.quarkus.hibernate.reactive.panache.common.WithTransaction;
@@ -19,6 +20,12 @@ public class TaskResource {
     @Inject
     TaskResource(TaskService taskService) {
         this.taskService = taskService;
+    }
+
+    @GET
+    @Path("/stats")
+    public Uni<TaskStatsDTO> getStats() {
+        return taskService.getStats();
     }
 
     @GET

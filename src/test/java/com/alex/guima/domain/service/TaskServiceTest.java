@@ -1,6 +1,7 @@
 package com.alex.guima.domain.service;
 
 import com.alex.guima.application.dto.TaskDTO;
+import com.alex.guima.application.dto.TaskStatsDTO;
 import com.alex.guima.domain.entity.Task;
 import com.alex.guima.domain.exception.IllegalUpdate;
 import com.alex.guima.repository.TaskRepository;
@@ -135,5 +136,48 @@ class TaskServiceTest {
                 () -> taskService.deleteTask(2L).await().indefinitely());
 
         assertTrue(exception.getMessage().contains("Task with id 2 not found"));
+    }
+
+    @Test
+    @DisplayName("getStats - Deve retornar estatísticas agregadas das tarefas")
+    void getStats_DeveRetornarEstatisticasAgregadas() {
+        // Arrange
+        when(taskRepository.count()).thenReturn(Uni.createFrom().item(10L));
+        when(taskRepository.count("completed", true)).thenReturn(Uni.createFrom().item(4L));
+        when(taskRepository.count(
+                org.mockito.ArgumentMatchers.eq("completed = false and dueDate is not null and dueDate < ?1"),
+                any(LocalDateTime.class)))
+                .thenReturn(Uni.createFrom().item(2L));
+
+        // Act
+        TaskStatsDTO stats = taskService.getStats().await().indefinitely();
+
+        // Assert
+        assertNotNull(stats);
+        assertEquals(10L, stats.total());
+        assertEquals(4L, stats.completed());
+        assertEquals(6L, stats.pending());
+        assertEquals(2L, stats.overdue());
+        assertEquals(40.0, stats.completionRate(), 0.001);
+    }
+
+    @Test
+    @DisplayName("getStats - Deve retornar completionRate zero quando não houver tarefas")
+    void getStats_SemTarefas_DeveRetornarCompletionRateZero() {
+        // Arrange
+        when(taskRepository.count()).thenReturn(Uni.createFrom().item(0L));
+        when(taskRepository.count("completed", true)).thenReturn(Uni.createFrom().item(0L));
+        when(taskRepository.count(
+                org.mockito.ArgumentMatchers.eq("completed = false and dueDate is not null and dueDate < ?1"),
+                any(LocalDateTime.class)))
+                .thenReturn(Uni.createFrom().item(0L));
+
+        // Act
+        TaskStatsDTO stats = taskService.getStats().await().indefinitely();
+
+        // Assert
+        assertNotNull(stats);
+        assertEquals(0L, stats.total());
+        assertEquals(0.0, stats.completionRate(), 0.001);
     }
 }

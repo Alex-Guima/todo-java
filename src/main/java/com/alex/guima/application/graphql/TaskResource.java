@@ -1,6 +1,7 @@
 package com.alex.guima.application.graphql;
 
 import com.alex.guima.application.dto.TaskDTO;
+import com.alex.guima.application.dto.TaskStatsDTO;
 import com.alex.guima.domain.entity.Task;
 import com.alex.guima.domain.service.TaskService;
 import io.quarkus.hibernate.reactive.panache.common.WithSession;
@@ -32,6 +33,13 @@ public class TaskResource {
     @WithSession
     public Uni<Task> findById(@Name("taskId") Long id) {
         return taskService.findById(id);
+    }
+
+    @Query("taskStats")
+    @Description("Get statistics about all tasks: total, completed, pending, overdue, and completion rate")
+    @WithSession
+    public Uni<TaskStatsDTO> getStats() {
+        return taskService.getStats();
     }
 
     @Mutation
