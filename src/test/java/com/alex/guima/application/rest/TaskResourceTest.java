@@ -1,6 +1,7 @@
 package com.alex.guima.application.rest;
 
 import com.alex.guima.application.dto.TaskDTO;
+import com.alex.guima.application.dto.TaskStatsDTO;
 import com.alex.guima.domain.entity.Task;
 import com.alex.guima.domain.service.TaskService;
 import io.quarkus.test.InjectMock;
@@ -151,5 +152,27 @@ class TaskResourceTest {
                 .statusCode(204);
 
         Mockito.verify(taskService, Mockito.times(1)).deleteTask(1L);
+    }
+
+    @Test
+    @DisplayName("GET /task/stats - Deve retornar 200 OK com estatísticas das tarefas")
+    void getStats_DeveRetornarStatus200ComEstatisticas() {
+        // Arrange
+        TaskStatsDTO statsMock = new TaskStatsDTO(10L, 4L, 6L, 2L, 40.0);
+        Mockito.when(taskService.getStats()).thenReturn(Uni.createFrom().item(statsMock));
+
+        // Act & Assert
+        given()
+                .when()
+                .get("/task/stats")
+                .then()
+                .statusCode(200)
+                .body("total", is(10))
+                .body("completed", is(4))
+                .body("pending", is(6))
+                .body("overdue", is(2))
+                .body("completionRate", is(40.0f));
+
+        Mockito.verify(taskService, Mockito.times(1)).getStats();
     }
 }
